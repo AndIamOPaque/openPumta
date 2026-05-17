@@ -25,6 +25,22 @@ import {
 import { Plus, Trash2, Calendar, Activity } from 'lucide-react';
 import { toast } from 'sonner';
 
+interface Habit {
+  id: number;
+  name: string;
+  subjectId?: number;
+}
+
+interface HabitLog {
+  id: number;
+  habitId: number;
+  startedAt: string;
+}
+
+interface DetailedHabit extends Habit {
+  log?: HabitLog[];
+}
+
 export default function HabitsPage() {
   const { user } = useAuthStore();
   const { data: dashboardData, isLoading: dashboardLoading } = useHabitDashboard();
@@ -45,8 +61,7 @@ export default function HabitsPage() {
 
   const habits = dashboardData?.habits || [];
   const todayStats = dashboardData?.todayStats || [];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const completedHabitIds = new Set(todayStats.map((log: any) => log.habitId));
+  const completedHabitIds = new Set(todayStats.map((log: HabitLog) => log.habitId));
 
   // Trigger animations
   useHabitRewards(completedHabitIds.size);
@@ -152,14 +167,12 @@ export default function HabitsPage() {
             <p className="text-sm">Add up to 6 habits above to begin your 21-day journey.</p>
           </div>
         ) : (
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          habits.map((habit: any) => {
+          habits.map((habit: Habit) => {
             const isCompletedToday = completedHabitIds.has(habit.id);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const detailedHabit = habitsWithLogs?.find((h: any) => h.id === habit.id);
+            const detailedHabit = habitsWithLogs?.find((h: DetailedHabit) => h.id === habit.id);
             const completionDates = new Set(
-              detailedHabit?.log?.map(
-                (l: any) => new Date(l.startedAt).toISOString().split('T')[0],
+              (detailedHabit as DetailedHabit)?.log?.map(
+                (l: HabitLog) => new Date(l.startedAt).toISOString().split('T')[0],
               ) || [],
             );
 

@@ -1,32 +1,43 @@
+'use client';
+
 import React from 'react';
-import { usePomodoroStore } from '@/store/usePomodoroStore';
+import { useTimerStore } from '@/store/useTimerStore';
+import { useTimerEngine } from '@/hooks/useTimerEngine';
 import { ConvertSecsToTimer } from '@/lib/utils';
 import ClockCircle from '../pomodoro/ClockCircle';
 import ClockTime from '../pomodoro/ClockTime';
 import ClockDialogBox from '../ClockDialogBox';
 
 function Clock() {
-  const { workDuration } = usePomodoroStore();
+  const store = useTimerStore();
+  const { remainingMs, progress, phase, mode } = useTimerEngine();
 
-  const {
-    hours: workHours,
-    minutes: workMinutes,
-    seconds: workSeconds,
-  } = ConvertSecsToTimer({ workSecs: workDuration });
+  const { hours, minutes, seconds } = ConvertSecsToTimer({
+    workSecs: Math.floor(remainingMs / 1000),
+  });
+
+  const getPhaseColor = () => {
+    if (mode === 'stopwatch') return store.workColor;
+    switch (phase) {
+      case 'work':
+        return store.workColor;
+      case 'shortBreak':
+        return store.shortBreakColor;
+      case 'longBreak':
+        return store.longBreakColor;
+      default:
+        return store.workColor;
+    }
+  };
 
   return (
-    <section className="flex justify-center items-center">
+    <section className="flex justify-center items-center scale-90 lg:scale-100">
       <ClockDialogBox
         child={
-          <div className="relative flex justify-center items-center">
-            <ClockCircle percent={100} size={'sm'} />
+          <div className="relative flex justify-center items-center transition-transform hover:scale-105 duration-300">
+            <ClockCircle percent={progress} size={'sm'} color={getPhaseColor()} />
             <div className="absolute">
-              <ClockTime
-                hours={workHours}
-                minutes={workMinutes}
-                seconds={workSeconds}
-                color={'#fff'}
-              />
+              <ClockTime hours={hours} minutes={minutes} seconds={seconds} color={'#fff'} />
             </div>
           </div>
         }

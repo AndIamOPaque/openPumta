@@ -1,72 +1,95 @@
-import { useState, useEffect, useCallback } from 'react';
-import { usePomodoroStore, PomodoroPhase } from '@/store/usePomodoroStore';
+import { useState, useEffect, useMemo } from 'react';
+import { useTimerStore } from '@/store/useTimerStore';
+import { useShallow } from 'zustand/react/shallow';
 
 export function useTimerEngine() {
-  const store = usePomodoroStore();
-  const [elapsedMs, setElapsedMs] = useState(0);
+  const {
+    status: running,
+    phase,
+    mode,
+    startTimestamp,
+    accumulatedMs,
+    settings,
+    completePhase,
+    activeSubjectId,
+    completedPomodoros,
+  } = useTimerStore(
+    useShallow((s) => ({
+      status: s.running,
+      phase: s.phase,
+      mode: s.mode,
+      startTimestamp: s.startTimestamp,
+      accumulatedMs: s.accumulatedMs,
+      settings: s.settings,
+      completePhase: s.completePhase,
+      activeSubjectId: s.activeSubjectId,
+      completedPomodoros: s.completedPomodoros,
+    })),
+  );
 
-  const getTargetDuration = useCallback(() => {
-    switch (store.phase) {
-      case 'WORK': return store.workDuration;
-      case 'SHORT_BREAK': return store.shortBreakDuration;
-      case 'LONG_BREAK': return store.longBreakDuration;
-      default: return 0;
+  const { workDuration, shortBreakDuration, longBreakDuration } = settings;
+
+  // localNow serves as a ticker to force re-renders for the live time display
+  // Using lazy initializer to avoid calling Date.now() during every render
+  const [localNow, setLocalNow] = useState(() => Date.now());
+
+  const targetDuration = useMemo(() => {
+    switch (phase) {
+      case 'work':
+        return workDuration;
+      case 'shortBreak':
+        return shortBreakDuration;
+      case 'longBreak':
+        return longBreakDuration;
+      default:
+        return 0;
     }
-  }, [store.phase, store.workDuration, store.shortBreakDuration, store.longBreakDuration]);
+  }, [phase, workDuration, shortBreakDuration, longBreakDuration]);
 
-  // Update loop for UI
+  const elapsedMs = useMemo(() => {
+    if (running && startTimestamp) {
+      return accumulatedMs + (localNow - startTimestamp);
+    }
+    return accumulatedMs;
+  }, [running, startTimestamp, accumulatedMs, localNow]);
+
   useEffect(() => {
-    let interval: ReturnType<typeof setInterval>;
-
-    if (store.status === 'RUNNING') {
-      // Immediate sync
-      const sync = () => {
-        const now = Date.now();
-        const currentElapsed = store.accumulatedMs + (now - (store.startTimestamp || now));
-        setElapsedMs(currentElapsed);
-
-        // Pomodoro Auto-Transition Logic
-        if (store.mode === 'POMODORO') {
-          const target = getTargetDuration();
-          if (currentElapsed >= target) {
-            // Auto-transition always counts as 100% progress
-            store.completePhase(1);
-          }
-        }
-      };
-
-      sync();
-      interval = setInterval(sync, 100); // 100ms for smooth UI, math is deterministic
-    } else {
-      setElapsedMs(store.accumulatedMs);
+    if (!running) {
+      return;
     }
+
+    const interval = setInterval(() => {
+      const now = Date.now();
+      setLocalNow(now);
+
+      // Pomodoro Auto-Transition Logic
+      if (mode === 'pomodoro' && phase !== 'idle' && phase !== 'paused') {
+        const currentElapsed = accumulatedMs + (now - (startTimestamp || now));
+        if (currentElapsed >= targetDuration) {
+          completePhase();
+        }
+      }
+    }, 100);
 
     return () => clearInterval(interval);
-  }, [
-    store.status, 
-    store.mode, 
-    store.phase, 
-    store.startTimestamp, 
-    store.accumulatedMs, 
-    getTargetDuration, 
-    store.completePhase
-  ]);
+  }, [running, mode, phase, startTimestamp, accumulatedMs, targetDuration, completePhase]);
 
-  const progress = store.mode === 'POMODORO' 
-    ? (elapsedMs / getTargetDuration()) * 100 
-    : 0;
+  const progress =
+    mode === 'pomodoro' && targetDuration > 0
+      ? Math.min(100, (elapsedMs / targetDuration) * 100)
+      : 0;
 
-  const remainingMs = store.mode === 'POMODORO' 
-    ? Math.max(0, getTargetDuration() - elapsedMs) 
-    : elapsedMs; // In stopwatch mode, we show elapsed
+  const remainingMs = mode === 'pomodoro' ? Math.max(0, targetDuration - elapsedMs) : elapsedMs;
 
   return {
     elapsedMs,
     remainingMs,
     progress,
-    status: store.status,
-    phase: store.phase,
-    mode: store.mode,
-    completedPomodoros: store.completedPomodoros
+    running,
+    phase,
+    mode,
+    activeSubjectId,
+    completedPomodoros,
+    settings,
   };
 }

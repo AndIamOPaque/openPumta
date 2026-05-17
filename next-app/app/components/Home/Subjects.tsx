@@ -12,8 +12,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { useSubjectTimerStore } from '@/store/useSubjectStore';
-import { usePomodoroStore } from '@/store/usePomodoroStore';
+import { useTimerStore } from '@/store/useTimerStore';
 import {
   useSubjects,
   useCreateSubject,
@@ -32,7 +31,7 @@ function Subjects() {
   const deleteSubjectMutation = useDeleteSubject();
   const { startTimer, endTimer } = useSubjectTimer();
 
-  const { timerRunningSubjectId, startLocalTimer, stopLocalTimer } = useSubjectTimerStore();
+  const { activeSubjectId, toggleSubject } = useTimerStore();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -41,28 +40,20 @@ function Subjects() {
   const router = useRouter();
 
   const handlePlayClick = async (subjectId: number) => {
-    if (timerRunningSubjectId === subjectId) {
-      try {
-        await endTimer.mutateAsync(subjectId);
-      } catch (error) {
-        console.error('Failed to end timer:', error);
-      }
-      stopLocalTimer();
-    } else {
-      if (timerRunningSubjectId) {
-        try {
-          await endTimer.mutateAsync(timerRunningSubjectId);
-        } catch (error) {
-          console.error('Failed to end previous timer:', error);
-        }
-      }
-      try {
-        await startTimer.mutateAsync(subjectId);
-        startLocalTimer(subjectId);
+    try {
+      await toggleSubject(
+        subjectId,
+        (id) => startTimer.mutateAsync(id),
+        (id) => endTimer.mutateAsync(id),
+      );
+      // If we started a timer, redirect to pomodoro page
+      // In toggleSubject, if we started it, activeSubjectId will eventually become subjectId
+      // But we can check if it's currently NOT subjectId to see if we're starting it
+      if (activeSubjectId !== subjectId) {
         router.push('/pomodoro');
-      } catch (error) {
-        console.error('Failed to start timer:', error);
       }
+    } catch (error) {
+      console.error('Failed to toggle timer:', error);
     }
   };
 
@@ -131,7 +122,7 @@ function Subjects() {
         <DataTable
           columns={columns({
             toggleTimer: handlePlayClick,
-            runningSubjectId: timerRunningSubjectId,
+            runningSubjectId: activeSubjectId,
             deleteSubject: handleDelete,
             handleEdit: handleEdit,
           })}

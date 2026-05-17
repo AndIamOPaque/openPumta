@@ -45,7 +45,7 @@ function Stats() {
 
   const focusData =
     statsData?.focusTimeArray
-      ?.map((d: any) => ({
+      ?.map((d: { date: string | number | Date; focusTimeHrs: number }) => ({
         date: new Date(d.date).toLocaleDateString('en-US', { weekday: 'short' }),
         hours: d.focusTimeHrs,
       }))
@@ -53,7 +53,7 @@ function Stats() {
 
   const habitData =
     statsData?.habitCompletionRateByDate
-      ?.map((d: any) => ({
+      ?.map((d: { date: string | number | Date; rate: number }) => ({
         date: new Date(d.date).toLocaleDateString('en-US', { weekday: 'short' }),
         rate: d.rate,
       }))
