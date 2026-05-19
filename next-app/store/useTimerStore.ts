@@ -78,8 +78,35 @@ export const useTimerStore = create<TimerState>()(
       startWork: async (subjectId) => {
         const state = get();
 
-        // 1. If already in work for THIS subject, just ensure it's running and return
+        // 1. If already in work for THIS subject end session
         if (state.phase === 'work' && state.activeSubjectId === subjectId && state.running) {
+          await api.patch(`/api/subject/${state.activeSubjectId}/endTimer`, {
+            endedAt: new Date(),
+          });
+          if (state.mode === 'stopwatch') {
+            set({
+              phase: 'idle',
+              running: false,
+              phaseStartedAt: null,
+              durationMs: 0,
+            });
+            return;
+          }
+
+          const nextCompleted = state.completedPomodoros + 1;
+          const isLongBreak = nextCompleted % 4 === 0;
+          const nextPhase = isLongBreak ? 'longBreak' : 'shortBreak';
+          const breakDuration = isLongBreak
+            ? state.settings.longBreakDuration
+            : state.settings.shortBreakDuration;
+
+          set({
+            completedPomodoros: nextCompleted,
+            phase: nextPhase,
+            running: state.settings.autoStartBreaks ? true : false,
+            phaseStartedAt: Date.now(),
+            durationMs: breakDuration,
+          });
           return;
         }
 
@@ -150,7 +177,7 @@ export const useTimerStore = create<TimerState>()(
         set({
           completedPomodoros: nextCompleted,
           phase: nextPhase,
-          running: true, // Breaks are automatic
+          running: state.settings.autoStartBreaks ? true : false,
           phaseStartedAt: Date.now(),
           durationMs: breakDuration,
         });

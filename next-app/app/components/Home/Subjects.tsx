@@ -29,7 +29,7 @@ function Subjects() {
   const updateSubjectMutation = useUpdateSubject();
   const deleteSubjectMutation = useDeleteSubject();
 
-  const { activeSubjectId, startWork } = useTimerStore();
+  const { activeSubjectId, startWork, settings } = useTimerStore();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -40,7 +40,7 @@ function Subjects() {
   const handlePlayClick = async (subjectId: number) => {
     try {
       await startWork(subjectId);
-      router.push('/pomodoro');
+      if (settings.autoStartBreaks) router.push('/pomodoro');
     } catch (error) {
       console.error('Failed to start timer:', error);
     }
