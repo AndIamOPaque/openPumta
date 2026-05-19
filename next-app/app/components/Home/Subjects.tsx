@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Subject, columns } from './Subjects/columbs';
+import { Subject, columns } from './Subjects/columns';
 import { DataTable } from './Subjects/data-table';
 import { Button } from '@/components/ui/button';
 import {
@@ -29,7 +29,7 @@ function Subjects() {
   const updateSubjectMutation = useUpdateSubject();
   const deleteSubjectMutation = useDeleteSubject();
 
-  const { activeSubjectId, startWork, settings } = useTimerStore();
+  const { activeSubjectId, startWork, settings, phase, running } = useTimerStore();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -40,7 +40,8 @@ function Subjects() {
   const handlePlayClick = async (subjectId: number) => {
     try {
       await startWork(subjectId);
-      if (settings.autoStartBreaks) router.push('/pomodoro');
+      console.log(phase);
+      if (phase != 'work') router.push('/pomodoro');
     } catch (error) {
       console.error('Failed to start timer:', error);
     }
@@ -111,7 +112,7 @@ function Subjects() {
         <DataTable
           columns={columns({
             toggleTimer: handlePlayClick,
-            runningSubjectId: activeSubjectId,
+            runningSubjectId: phase === 'work' && running ? activeSubjectId : null,
             deleteSubject: handleDelete,
             handleEdit: handleEdit,
           })}
