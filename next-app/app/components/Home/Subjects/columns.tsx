@@ -30,6 +30,7 @@ export type Subject = {
   // UI fields
   goalWorkSecs?: number;
   createdAt?: string;
+  color?: string;
 };
 
 export const columns = ({
@@ -48,25 +49,16 @@ export const columns = ({
     cell: ({ row }) => {
       const subject = row.original;
       const isRunning = runningSubjectId === subject.id;
+      const iconColor = subject.color || '#f97316';
       return (
         <div className="flex items-center">
-          <Button onClick={() => toggleTimer(subject.id)} variant="ghost">
+          <Button
+            onClick={() => toggleTimer(subject.id)}
+            variant="ghost"
+            style={{ color: iconColor }}
+          >
             {isRunning ? <IoIosPause /> : <IoIosPlay />}
           </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => handleEdit(subject)}>Edit</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => deleteSubject(subject.id)}>Delete</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       );
     },
@@ -150,10 +142,25 @@ export const columns = ({
     },
   },
   {
-    header: 'Date',
+    header: 'edit',
     cell: ({ row }) => {
       const subject = row.original;
-      return subject.createdAt ? new Date(subject.createdAt).toLocaleDateString() : 'N/A';
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuItem onClick={() => handleEdit(subject)}>Edit</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => deleteSubject(subject.id)}>Delete</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
     },
   },
 ];

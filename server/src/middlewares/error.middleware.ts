@@ -2,12 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { ApiError } from '../utils/ApiError';
 import { Prisma } from '../../generated/prisma/client';
 
-const errorHandler = (
-  err: Error | ApiError | unknown,
-  req: Request,
-  res: Response,
-  _next: NextFunction,
-) => {
+const errorHandler = (err: any, req: Request, res: Response, _next: NextFunction) => {
   let error = err;
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
     switch (err.code) {
@@ -20,7 +15,9 @@ const errorHandler = (
         break;
 
       default:
-        error = new ApiError(400, 'Database error');
+        console.error('Prisma Error Code:', err.code);
+        console.error('Prisma Meta:', err.meta);
+        error = new ApiError(400, `Database error: ${err.code}`);
         break;
     }
   }

@@ -30,7 +30,7 @@ const getAllSubject = asyncHandler(async (req: Request, res: Response) => {
 });
 
 const createSubject = asyncHandler(async (req: Request, res: Response) => {
-  const { name, goalWorkSecs } = req.body;
+  const { name, goalWorkSecs, color } = req.body;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const userId = (req as any).user?.id;
 
@@ -43,6 +43,7 @@ const createSubject = asyncHandler(async (req: Request, res: Response) => {
       name,
       userId: Number(userId),
       goalWorkSecs: goalWorkSecs !== undefined ? Number(goalWorkSecs) : 0,
+      ...(color !== undefined && { color }),
     },
   });
   res.status(200).json(new ApiResponse(200, subject, 'Subject Created successfully'));

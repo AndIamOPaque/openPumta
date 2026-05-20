@@ -29,11 +29,13 @@ function Subjects() {
   const updateSubjectMutation = useUpdateSubject();
   const deleteSubjectMutation = useDeleteSubject();
 
-  const { activeSubjectId, startWork, settings, phase, running } = useTimerStore();
+  const { activeSubjectId, startWork, phase, running } = useTimerStore();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
+  const [newSubjectColor, setNewSubjectColor] = useState('#f97316');
+  const [editSubjectColor, setEditSubjectColor] = useState('#f97316');
 
   const router = useRouter();
 
@@ -49,6 +51,7 @@ function Subjects() {
 
   const handleEdit = (subject: Subject) => {
     setEditingSubject(subject);
+    setEditSubjectColor(subject.color || '#f97316');
     setIsEditDialogOpen(true);
   };
 
@@ -83,8 +86,9 @@ function Subjects() {
                 const seconds = Number(formData.get('seconds')) || 0;
                 const goalWorkSecs = hours * 3600 + minutes * 60 + seconds;
 
-                createSubject.mutate({ name, goalWorkSecs });
+                createSubject.mutate({ name, goalWorkSecs, color: newSubjectColor });
                 e.currentTarget.reset();
+                setNewSubjectColor('#f97316');
                 setIsAddDialogOpen(false);
               }}
               className="flex flex-col gap-4"
@@ -98,6 +102,17 @@ function Subjects() {
                   <Input name="minutes" placeholder="mm" type="number" min={0} max={59} />
                   <span>:</span>
                   <Input name="seconds" placeholder="ss" type="number" min={0} max={59} />
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <span className="text-sm font-medium">Subject Color</span>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={newSubjectColor}
+                    onChange={(e) => setNewSubjectColor(e.target.value)}
+                    className="w-10 h-10 p-0 border-0 rounded cursor-pointer"
+                  />
                 </div>
               </div>
               <Button type="submit" disabled={createSubject.isPending}>
@@ -141,6 +156,7 @@ function Subjects() {
                   id: editingSubject.id,
                   name,
                   goalWorkSecs,
+                  color: editSubjectColor,
                 });
                 setIsEditDialogOpen(false);
                 setEditingSubject(null);
@@ -186,6 +202,17 @@ function Subjects() {
                     defaultValue={
                       ConvertSecsToTimer({ workSecs: editingSubject.goalWorkSecs || 0 }).seconds
                     }
+                  />
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <span className="text-sm font-medium">Subject Color</span>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={editSubjectColor}
+                    onChange={(e) => setEditSubjectColor(e.target.value)}
+                    className="w-10 h-10 p-0 border-0 rounded cursor-pointer"
                   />
                 </div>
               </div>

@@ -56,6 +56,7 @@ model Subject {
   id           Int          @id @default(autoincrement())
   name         String
   goalWorkSecs Int          @default(0)
+  color        String       @default("#f97316")
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId       Int
   habits       Habit[] // SO that hatbis are automaticaly ticked after certain amount of time has been logged

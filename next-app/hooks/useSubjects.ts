@@ -16,13 +16,20 @@ export interface Subject {
   subjectLogs?: SubjectLog[];
   workSecs?: number;
   goalWorkSecs?: number;
+  color?: string;
 }
 
 export const useSubjects = () => {
+  const to = new Date();
+  const from = new Date();
+  from.setDate(from.getDate() - 1);
+
   return useQuery<Subject[]>({
     queryKey: ['subjects'],
     queryFn: async () => {
-      const { data } = await api.get(`/api/subject/stats`);
+      const { data } = await api.get(
+        `/api/subject/stats?from=${from.toISOString()}&to=${to.toISOString()}`,
+      );
       return data.data; // ApiResponse.data
     },
   });
@@ -32,7 +39,7 @@ export const useCreateSubject = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (newSubject: { name: string; goalWorkSecs?: number }) => {
+    mutationFn: async (newSubject: { name: string; goalWorkSecs?: number; color?: string }) => {
       const { data } = await api.post('/api/subject', newSubject);
       return data.data; // ApiResponse.data
     },
