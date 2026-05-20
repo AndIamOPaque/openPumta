@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { cn } from '@/lib/utils';
 import {
   Home,
   BarChart,
@@ -10,8 +11,9 @@ import {
   LogIn,
   CheckCircle,
   Settings,
+  Menu,
 } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
 
 const navItems = [
@@ -25,6 +27,7 @@ const navItems = [
 
 export default function Navigation() {
   const pathname = usePathname();
+  const [isVisible, setIsVisible] = useState(true);
   const { user, fetchUser, loading } = useAuthStore();
 
   useEffect(() => {
@@ -53,15 +56,22 @@ export default function Navigation() {
       </div>
 
       {/* Desktop Left Sidebar */}
-      <aside className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-64 border-r bg-card/50 backdrop-blur-xl z-40 p-4">
-        <div className="flex items-center gap-2 px-2 py-4 mb-6">
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-xl">O</span>
+      <aside
+        className={cn(
+          `lg:flex flex-col fixed left-0 top-0 bottom-0 w-64 border-r bg-card/50 backdrop-blur-xl z-40 p-4 `,
+          isVisible && ' w-10! z-0!',
+        )}
+      >
+        <div className="flex justify-between items-center mb-6 py-4">
+          <div className="hidden flex items-center gap-2 px-2  ">
+            <div className=" h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
+              <span className="text-primary-foreground font-bold text-xl">O</span>
+            </div>
+            <span className="font-bold text-xl tracking-tight">OpenPumta</span>
           </div>
-          <span className="font-bold text-xl tracking-tight">OpenPumta</span>
+          <Menu onClick={() => setIsVisible((prev) => !prev)} />
         </div>
-
-        <nav className="flex-1 space-y-1">
+        <nav className="hidden flex-1 space-y-1">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             return (
