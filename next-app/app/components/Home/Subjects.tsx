@@ -88,7 +88,7 @@ function Subjects() {
   const totalTrackedFormatted = `${pad(totalH)}:${pad(totalM)}:${pad(totalS)}`;
 
   return (
-    <section className="rounded-xl border border-border bg-background p-4">
+    <section className="rounded-xl  bg-background p-4">
       <div className="mb-4 flex items-start justify-between">
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">Subjects</h1>
@@ -162,7 +162,7 @@ function Subjects() {
       </div>
 
       <div className="rounded-lg border border-border">
-        <div className=" overflow-y-auto">
+        <div className=" overflow-y-scroll">
           <table className="w-full text-lg bg-dashboard-card">
             <tbody>
               {Subjects.map((subject: Subject) => {
@@ -202,13 +202,22 @@ function Subjects() {
                     key={subject.id}
                     className="border-b border-border last:border-b-0  hover:bg-muted/30 transition-colors"
                   >
-                    <td className="px-4 py-4 font-medium text-foreground">{subject.name}</td>
+                    <td className="px-4 py-4 font-medium text-sm text-foreground capitalize">
+                      {subject.name}
+                    </td>
+                    <td className="px-0 py-2">
+                      <span
+                        className={`inline-flex items-center justify-center text-left rounded-full border px-2 py-0.5 text-xs tracking-tighter font-medium whitespace-nowrap ${statusClass}`}
+                      >
+                        {statusText}
+                      </span>
+                    </td>
                     <td className="px-4 py-4 font-mono text-muted-foreground whitespace-nowrap">
                       {`${pad(hours)}:${pad(minutes)}:${pad(seconds)} / ${goal > 0 ? (goal / 3600).toFixed(1).replace(/\.0$/, '') + 'h' : '0h'}`}
                     </td>
                     <td className="px-4 py-2">
                       <div className="flex items-center gap-3 min-w-40">
-                        <div className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden">
+                        <div className="h-1.5 flex-1 rounded-full bg-muted overflow-scroll">
                           <div
                             className="h-full rounded-full bg-orange-500 transition-all"
                             style={{ width: `${percent}%` }}
@@ -219,13 +228,7 @@ function Subjects() {
                         </span>
                       </div>
                     </td>
-                    <td className="px-4 py-2">
-                      <span
-                        className={`inline-flex items-center justify-center rounded-full border px-2 py-0.5 text-[10px] font-medium whitespace-nowrap ${statusClass}`}
-                      >
-                        {statusText}
-                      </span>
-                    </td>
+
                     <td className="px-4 py-2 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Button
