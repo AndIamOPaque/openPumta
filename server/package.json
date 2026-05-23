@@ -7,7 +7,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon --exec tsx src/index.ts",
-    "prebuild": "npx prisma generate",
+    "prebuild": "pnpm prisma generate",
     "build": "tsc",
     "start": "node dist/src/index.js",
     "seed": "tsx prisma/seed.ts"
@@ -28,20 +28,23 @@
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "passport-jwt": "^4.0.1",
-    "pg": "^8.16.3",
-    "prisma": "^7.2.0"
+    "pg": "^8.16.3"
   },
   "devDependencies": {
+    "prisma": "^7.2.0",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
-    "@types/node": "^25.0.3",
+    "@types/node": "^22.10.0",
     "@types/passport": "^1.0.17",
     "@types/passport-google-oauth20": "^2.0.17",
     "@types/passport-jwt": "^4.0.1",
     "@types/pg": "^8.16.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": "22.x"
   }
 }
