@@ -20,7 +20,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   loading: true,
   fetchUser: async () => {
     try {
-      const { data } = await api.get('/api/auth/user');
+      const { data } = await api.get('/auth/user');
       set({ user: data, loading: false });
     } catch {
       set({ user: null, loading: false });
@@ -28,7 +28,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
   logout: async () => {
     try {
-      await api.post('/api/auth/logout');
+      await api.post('/auth/logout');
       set({ user: null });
       window.location.href = '/login';
     } catch (error) {

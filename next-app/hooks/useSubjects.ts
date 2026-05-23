@@ -30,7 +30,7 @@ export const useSubjects = () => {
     queryKey: ['subjects'],
     queryFn: async () => {
       const { data } = await api.get(
-        `/api/subject/stats?from=${from.toISOString()}&to=${to.toISOString()}`,
+        `/subject/stats?from=${from.toISOString()}&to=${to.toISOString()}`,
       );
       return data.data; // ApiResponse.data
     },
@@ -47,7 +47,7 @@ export const useCreateSubject = () => {
       color?: string;
       habits?: number[];
     }) => {
-      const { data } = await api.post('/api/subject', newSubject);
+      const { data } = await api.post('/subject', newSubject);
       return data.data; // ApiResponse.data
     },
     onSuccess: () => {
@@ -75,7 +75,7 @@ export const useUpdateSubject = () => {
       color: string;
       habits?: number[];
     }) => {
-      const { data } = await api.patch(`/api/subject/updateSubjectName/${id}`, {
+      const { data } = await api.patch(`/subject/updateSubjectName/${id}`, {
         name,
         goalWorkSecs,
         color,
@@ -96,7 +96,7 @@ export const useDeleteSubject = () => {
 
   return useMutation({
     mutationFn: async (id: number) => {
-      const { data } = await api.delete(`/api/subject/${id}`);
+      const { data } = await api.delete(`/subject/${id}`);
       return data.data;
     },
     onSuccess: () => {
@@ -110,7 +110,7 @@ export const useSubjectTimer = () => {
 
   const startTimer = useMutation({
     mutationFn: async (subjectId: number) => {
-      const { data } = await api.patch(`/api/subject/${subjectId}/startTimer`);
+      const { data } = await api.patch(`/subject/${subjectId}/startTimer`);
       return data.data; // ApiResponse.data
     },
     onSuccess: () => {
@@ -120,7 +120,7 @@ export const useSubjectTimer = () => {
 
   const endTimer = useMutation({
     mutationFn: async (subjectId: number) => {
-      const { data } = await api.patch(`/api/subject/${subjectId}/endTimer`);
+      const { data } = await api.patch(`/subject/${subjectId}/endTimer`);
       return data.data; // ApiResponse.data
     },
     onSuccess: () => {

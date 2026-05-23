@@ -14,7 +14,7 @@ export const useDailyTimeline = (date?: string) => {
   return useQuery<TimelineItem[]>({
     queryKey: ['timeline', date],
     queryFn: async () => {
-      const { data } = await api.get(`/api/stats/timeline`, {
+      const { data } = await api.get(`/stats/timeline`, {
         params: { date },
       });
       return data.data;
@@ -26,7 +26,7 @@ export const useDashboardStats = () => {
   return useQuery({
     queryKey: ['dashboardStats'],
     queryFn: async () => {
-      const { data } = await api.get(`/api/stats/dashboard`);
+      const { data } = await api.get(`/stats/dashboard`);
       return data.data; // { focusTimeArray, habitCompletionRateByDate, summary }
     },
   });

@@ -16,8 +16,8 @@ export const googleCallback = (req: Request, res: Response) => {
 
   res.cookie('token', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'lax' : 'lax',
+    secure: true,
+    sameSite: 'none',
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     path: '/',
   });
@@ -34,6 +34,10 @@ export const getCurrentUser = asyncHandler(async (req: Request, res: Response) =
 });
 
 export const logout = asyncHandler(async (req: Request, res: Response) => {
-  res.clearCookie('token', { path: '/' });
+  res.clearCookie('token', {
+    path: '/',
+    secure: true,
+    sameSite: 'none',
+  });
   res.json({ message: 'Logged out' });
 });

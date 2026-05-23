@@ -80,7 +80,7 @@ export const useTimerStore = create<TimerState>()(
 
         // 1. If already in work for THIS subject end session
         if (state.phase === 'work' && state.activeSubjectId === subjectId && state.running) {
-          await api.patch(`/api/subject/${state.activeSubjectId}/endTimer`, {
+          await api.patch(`/subject/${state.activeSubjectId}/endTimer`, {
             endedAt: new Date(),
           });
           if (state.mode === 'stopwatch') {
@@ -113,7 +113,7 @@ export const useTimerStore = create<TimerState>()(
         // 2. If switching subjects or currently in work, end the previous session
         if (state.phase === 'work' && state.activeSubjectId) {
           try {
-            await api.patch(`/api/subject/${state.activeSubjectId}/endTimer`, {
+            await api.patch(`/subject/${state.activeSubjectId}/endTimer`, {
               endedAt: new Date(),
             });
           } catch (e) {
@@ -123,7 +123,7 @@ export const useTimerStore = create<TimerState>()(
 
         // 3. Start new backend log
         try {
-          await api.patch(`/api/subject/${subjectId}/startTimer`);
+          await api.patch(`/subject/${subjectId}/startTimer`);
         } catch (e) {
           console.error('Failed to start new timer:', e);
           return;
@@ -149,7 +149,7 @@ export const useTimerStore = create<TimerState>()(
           : (state.phaseStartedAt || Date.now()) + state.durationMs;
 
         try {
-          await api.patch(`/api/subject/${state.activeSubjectId}/endTimer`, {
+          await api.patch(`/subject/${state.activeSubjectId}/endTimer`, {
             endedAt: new Date(targetEnd),
           });
         } catch (e) {

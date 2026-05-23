@@ -21,7 +21,7 @@ export const useTodos = () => {
   return useQuery<ToDo[]>({
     queryKey: ['todos'],
     queryFn: async () => {
-      const { data } = await api.get(`/api/todo`);
+      const { data } = await api.get(`/todo`);
       return data.data; // ApiResponse.data
     },
   });
@@ -32,7 +32,7 @@ export const useCreateTodo = () => {
 
   return useMutation({
     mutationFn: async (newTodo: { title: string; description?: string }) => {
-      const { data } = await api.post('/api/todo/create', newTodo);
+      const { data } = await api.post('/todo/create', newTodo);
       return data.data; // ApiResponse.data
     },
     onSuccess: () => {
@@ -46,7 +46,7 @@ export const useUpdateTodo = () => {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<ToDo> & { id: number }) => {
-      const { data } = await api.patch(`/api/todo/${id}`, updates);
+      const { data } = await api.patch(`/todo/${id}`, updates);
       return data.data; // ApiResponse.data
     },
     onSuccess: () => {
@@ -60,7 +60,7 @@ export const useDeleteTodo = () => {
 
   return useMutation({
     mutationFn: async (id: number) => {
-      const { data } = await api.delete(`/api/todo/${id}`);
+      const { data } = await api.delete(`/todo/${id}`);
       return data.data; // ApiResponse.data
     },
     onSuccess: () => {
@@ -74,7 +74,7 @@ export const useTodoTimer = () => {
 
   const startTimer = useMutation({
     mutationFn: async (toDoId: number) => {
-      const { data } = await api.post(`/api/todo/${toDoId}/start`);
+      const { data } = await api.post(`/todo/${toDoId}/start`);
       return data.data; // ApiResponse.data
     },
     onSuccess: () => {
@@ -84,7 +84,7 @@ export const useTodoTimer = () => {
 
   const endTimer = useMutation({
     mutationFn: async (toDoId: number) => {
-      const { data } = await api.post(`/api/todo/${toDoId}/end`);
+      const { data } = await api.post(`/todo/${toDoId}/end`);
       return data.data; // ApiResponse.data
     },
     onSuccess: () => {

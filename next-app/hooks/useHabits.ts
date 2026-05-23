@@ -13,7 +13,7 @@ export const useHabits = () => {
   return useQuery<Habit[]>({
     queryKey: ['habits'],
     queryFn: async () => {
-      const { data } = await api.get(`/api/habits`);
+      const { data } = await api.get(`/habits`);
       return data.data; // ApiResponse.data
     },
   });
@@ -23,7 +23,7 @@ export const useHabitsWithLogs = (fromDate: string) => {
   return useQuery({
     queryKey: ['habitsWithLogs', fromDate],
     queryFn: async () => {
-      const { data } = await api.get(`/api/habits/logs`, {
+      const { data } = await api.get(`/habits/logs`, {
         params: { from: fromDate },
       });
       return data.data;
@@ -36,7 +36,7 @@ export const useCreateHabit = () => {
 
   return useMutation({
     mutationFn: async (newHabit: Partial<Habit>) => {
-      const { data } = await api.post('/api/habits', newHabit);
+      const { data } = await api.post('/habits', newHabit);
       return data.data; // ApiResponse.data
     },
     onSuccess: () => {
@@ -50,7 +50,7 @@ export const useHabitDashboard = () => {
   return useQuery({
     queryKey: ['habitDashboard'],
     queryFn: async () => {
-      const { data } = await api.get(`/api/habits/dashboard`);
+      const { data } = await api.get(`/habits/dashboard`);
       return data.data; // { habits, todayStats, activeLog }
     },
   });
@@ -61,7 +61,7 @@ export const useToggleHabitCompletion = () => {
 
   return useMutation({
     mutationFn: async (habitId: number) => {
-      const { data } = await api.patch(`/api/habits/${habitId}/toggle`);
+      const { data } = await api.patch(`/habits/${habitId}/toggle`);
       return data.data; // { completed: boolean }
     },
     onSuccess: () => {
@@ -76,7 +76,7 @@ export const useDeleteHabit = () => {
 
   return useMutation({
     mutationFn: async (habitId: number) => {
-      const { data } = await api.delete(`/api/habits/${habitId}`);
+      const { data } = await api.delete(`/habits/${habitId}`);
       return data.data;
     },
     onSuccess: () => {
