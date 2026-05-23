@@ -12,32 +12,28 @@ import {
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import api from '@/lib/api';
 
 export function SignupForm({ className, ...props }: React.ComponentProps<'form'>) {
   const [user, setUser] = useState<{ name: string; email: string } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:4000'}/api/auth/user`, {
-      credentials: 'include',
-    })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        setUser(data);
+    api
+      .get('/auth/user')
+      .then((res) => {
+        setUser(res.data);
         setLoading(false);
       })
       .catch(() => setLoading(false));
   }, []);
 
   const handleGoogleSignup = () => {
-    window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:4000'}/api/auth/google`;
+    window.location.href = '/api/auth/google';
   };
 
   const handleLogout = () => {
-    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:4000'}/api/auth/logout`, {
-      method: 'POST',
-      credentials: 'include',
-    }).then(() => {
+    api.post('/auth/logout').then(() => {
       window.location.reload();
     });
   };

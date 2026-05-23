@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Download, Database, Settings as SettingsIcon } from 'lucide-react';
 import { toast } from 'sonner';
+import api from '@/lib/api';
 
 export default function SettingsPage() {
   const { user } = useAuthStore();
@@ -13,15 +14,11 @@ export default function SettingsPage() {
     if (!user) return;
 
     try {
-      const response = await fetch(
-        `http://localhost:4000/api/export/user/${user.id}?format=${format}`,
-      );
+      const response = await api.get(`/export/user/${user.id}?format=${format}`, {
+        responseType: 'blob',
+      });
 
-      if (!response.ok) {
-        throw new Error('Failed to export data');
-      }
-
-      const blob = await response.blob();
+      const blob = response.data;
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;

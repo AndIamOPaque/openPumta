@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { GalleryVerticalEnd, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import api from '@/lib/api';
 
 interface User {
   id: string;
@@ -24,11 +25,10 @@ export default function ProfilePage() {
   });
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:4000'}/api/auth/user`, {
-      credentials: 'include',
-    })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
+    api
+      .get('/auth/user')
+      .then((res) => {
+        const data = res.data;
         if (data) {
           setUser(data);
           setFormData({
@@ -47,16 +47,9 @@ export default function ProfilePage() {
     if (!user) return;
     setSaving(true);
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:4000'}/api/users/${user.id}`,
-        {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData),
-        },
-      );
-      if (res.ok) {
-        const updated = await res.json();
+      const res = await api.patch(`/users/${user.id}`, formData);
+      if (res.status === 200) {
+        const updated = res.data;
         setUser(updated.data);
         alert('Profile updated successfully!');
       }
