@@ -46,8 +46,10 @@ passport.use(
 
 const cookieExtractor = (req: any) => {
   let token = null;
+  console.log('All Cookies received:', req.cookies);
   if (req && req.cookies) {
     token = req.cookies['token'];
+    console.log('Extracted Token from cookie:', token ? 'Found' : 'Not Found');
   }
   return token || ExtractJwt.fromAuthHeaderAsBearerToken()(req);
 };

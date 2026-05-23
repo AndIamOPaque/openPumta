@@ -11,6 +11,9 @@ export const googleCallback = (req: Request, res: Response) => {
     expiresIn: '7d',
   });
 
+  console.log('Setting cookie for user:', user.email);
+  console.log('Frontend URL for redirect:', frontendUrl);
+
   res.cookie('token', token, {
     httpOnly: true,
     secure: true,
