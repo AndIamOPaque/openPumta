@@ -13,6 +13,8 @@ import 'dotenv/config';
 import cookieParser from 'cookie-parser';
 import passport from 'passport';
 import { errorHandler } from './middlewares/error.middleware.js';
+import { ApiResponse } from './utils/ApiResponse.js';
+import { data } from '../../next-app/app/settings/page';
 
 let app = express();
 
@@ -35,6 +37,9 @@ app.listen(process.env.PORT || 4000, () => {
 // app.route;
 app.get('/', async (req: express.Request, res: express.Response) =>
   res.send(await prisma.user.findMany()),
+);
+app.get('/health', async (req: express.Request, res: express.Response) =>
+  res.json(new ApiResponse(200, { health: 'very nice!!' }, 'success')),
 );
 app.use('/api/users', userRoute);
 app.use('/api/subject', subjectRoute);

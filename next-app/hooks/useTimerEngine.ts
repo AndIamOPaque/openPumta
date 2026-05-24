@@ -60,6 +60,8 @@ export function useTimerEngine() {
 
   // Main tick loop
   useEffect(() => {
+    console.log('inside main tick loop');
+
     if (!running || !hasHydrated) return;
 
     const interval = setInterval(() => {
