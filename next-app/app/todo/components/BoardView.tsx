@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   DndContext,
   DragEndEvent,
@@ -32,6 +32,7 @@ import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import api from '@/lib/api';
+import { Minimize2 } from 'lucide-react';
 
 interface BoardViewProps {
   spaceId: number;
@@ -184,12 +185,112 @@ export function BoardView({ spaceId, columns, blocksByColumn }: BoardViewProps) 
   const sortedColumns = [...columns].sort((a, b) => a.order - b.order);
   const columnIds = sortedColumns.map((c) => c.id);
 
-  // Filter to focused column if in focus mode
-  const visibleColumns = focusedColumnId
-    ? sortedColumns.filter((c) => c.id === focusedColumnId)
-    : sortedColumns;
+  // ── ESC key exits focus mode ──────────────────────────────────────────────
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && focusedColumnId) setFocusedColumn(null);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [focusedColumnId, setFocusedColumn]);
 
-  // ─── Mobile: Tabs view ─────────────────────────────────────────────────────
+  // ── Fullscreen focus overlay ───────────────────────────────────────────────
+  const focusedColumn = focusedColumnId
+    ? sortedColumns.find((c) => c.id === focusedColumnId)
+    : null;
+
+  const focusOverlay = focusedColumn
+    ? (() => {
+        const colBlocks = (blocksByColumn[focusedColumn.id] || []).sort(
+          (a, b) => a.order - b.order,
+        );
+        return (
+          <div
+            className="fixed inset-0 z-50 flex flex-col bg-background/95 backdrop-blur-md"
+            style={{ paddingLeft: 'var(--sidebar-width, 0px)' }}
+          >
+            {/* Focus header bar */}
+            <div className="flex items-center justify-between px-6 py-3 border-b border-border/40 bg-card/60 backdrop-blur-sm">
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-semibold tracking-widest uppercase text-muted-foreground/60">
+                  Focus Mode
+                </span>
+                <span className="text-muted-foreground/40">·</span>
+                <h2 className="text-lg font-bold text-foreground">{focusedColumn.title}</h2>
+                <span className="text-xs text-muted-foreground/50 tabular-nums bg-muted/40 px-2 py-0.5 rounded-full">
+                  {colBlocks.length} block{colBlocks.length !== 1 ? 's' : ''}
+                </span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-2 text-muted-foreground hover:text-foreground"
+                onClick={() => setFocusedColumn(null)}
+              >
+                <Minimize2 className="h-4 w-4" />
+                Exit focus
+                <kbd className="text-[10px] bg-muted/60 border border-border/40 rounded px-1.5 py-0.5 font-mono">
+                  ESC
+                </kbd>
+              </Button>
+            </div>
+
+            {/* Full-width column content */}
+            <div className="flex-1 overflow-y-auto px-6 py-6">
+              <div className="max-w-2xl mx-auto space-y-1">
+                {colBlocks.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-24 text-muted-foreground/40">
+                    <p className="text-sm italic">No blocks yet in this column.</p>
+                    <p className="text-xs mt-1">
+                      Use the &quot;Add Block +&quot; button to get started.
+                    </p>
+                  </div>
+                ) : (
+                  colBlocks.map((block) => (
+                    <BlockItem
+                      key={block.id}
+                      block={block}
+                      onUpdate={(updates) => updateBlock.mutate(updates)}
+                      onDelete={(id) =>
+                        deleteBlock.mutate(
+                          { columnId: focusedColumn.id, id },
+                          { onSuccess: () => toast.success('Block deleted') },
+                        )
+                      }
+                    />
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Add block footer */}
+            <div className="border-t border-border/30 px-6 py-3 bg-card/40 backdrop-blur-sm">
+              <div className="max-w-2xl mx-auto flex items-center gap-2 flex-wrap">
+                <span className="text-xs text-muted-foreground/60 mr-1">Add block:</span>
+                {(['HEADING', 'PARAGRAPH', 'TODO', 'DIVIDER'] as BlockType[]).map((type) => (
+                  <Button
+                    key={type}
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs gap-1.5 border-border/40 hover:border-primary/40 hover:text-primary"
+                    onClick={() =>
+                      createBlock.mutate(
+                        { columnId: focusedColumn.id, type },
+                        { onSuccess: () => toast.success('Block added') },
+                      )
+                    }
+                  >
+                    <Plus className="h-3 w-3" />
+                    {type.charAt(0) + type.slice(1).toLowerCase()}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      })()
+    : null;
+
   const mobileView = (
     <div className="flex flex-col gap-4 px-4 md:hidden">
       {sortedColumns.length === 0 ? (
@@ -259,7 +360,6 @@ export function BoardView({ spaceId, columns, blocksByColumn }: BoardViewProps) 
     </div>
   );
 
-  // ─── Desktop: Kanban board ─────────────────────────────────────────────────
   const desktopView = (
     <DndContext
       sensors={sensors}
@@ -270,7 +370,7 @@ export function BoardView({ spaceId, columns, blocksByColumn }: BoardViewProps) 
     >
       <div className="hidden md:flex items-start gap-3 px-4 pb-6 overflow-x-auto min-h-[calc(100vh-200px)]">
         <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
-          {visibleColumns.map((col) => {
+          {sortedColumns.map((col) => {
             const colBlocks = (blocksByColumn[col.id] || []).sort((a, b) => a.order - b.order);
             return (
               <ColumnCard
@@ -304,8 +404,6 @@ export function BoardView({ spaceId, columns, blocksByColumn }: BoardViewProps) 
             );
           })}
         </SortableContext>
-
-        {/* Resize handle visual separators are handled by column gaps */}
 
         {/* Add Column Button */}
         <div className="flex-shrink-0">
@@ -364,6 +462,10 @@ export function BoardView({ spaceId, columns, blocksByColumn }: BoardViewProps) 
 
   return (
     <>
+      {/* Full-screen focus overlay — rendered on top of everything */}
+      {focusOverlay}
+
+      {/* Normal board (always rendered underneath so state is preserved) */}
       {mobileView}
       {desktopView}
     </>

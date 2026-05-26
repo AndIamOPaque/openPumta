@@ -23,9 +23,7 @@ function BlockLabel({ type }: { type: BlockType }) {
     DIVIDER: 'DIVIDER',
   };
   return (
-    <span className="text-[9px] font-semibold tracking-widest text-muted-foreground/60 uppercase">
-      {labels[type]}
-    </span>
+    <span className="text-[9px] font-semibold tracking-widest text-muted-foreground/60 uppercase"></span>
   );
 }
 
