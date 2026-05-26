@@ -22,7 +22,7 @@ const navItems = [
   { href: '/', label: 'Dashboard', icon: Home },
   { href: '/pomodoro', label: 'Timer', icon: Timer },
   { href: '/habits', label: 'Habits', icon: CheckCircle },
-  { href: '/todo', label: 'Tasks', icon: ListChecks },
+  { href: '/todo', label: 'Workspace', icon: ListChecks },
   { href: '/stats', label: 'Stats', icon: BarChart },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
