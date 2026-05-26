@@ -1,5 +1,5 @@
 {
-  "name": "OpenPumta",
+  "name": "OpenPumTa",
   "version": "0.0.1",
   "description": "yelpumta Open source alternative, works on web, mobile,pc data-driven productivity system that combines subject-wise Pomodoro focus, hubermen habit tracker system with stats section downloadable user data and ai assistant to summarise and help you reach your goals!!! ",
   "type": "module",
@@ -7,6 +7,7 @@
   "prepare": "husky",
   "private": "true",
   "scripts": {
+    "dev": "concurrently -n \"next,server\" -c \"cyan,magenta\" \"pnpm --filter next-app dev\" \"pnpm --filter server dev\"",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "prepare": "husky"
@@ -28,6 +29,7 @@
     "@eslint/js": "^10.0.1",
     "@typescript-eslint/eslint-plugin": "^8.56.1",
     "@typescript-eslint/parser": "^8.56.1",
+    "concurrently": "^9.2.1",
     "eslint": "^9.39.3",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-import": "^2.32.0",
