@@ -56,14 +56,14 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'form'>)
   }
 
   return (
-    <div className={cn('flex flex-col gap-6', className)} {...props}>
+    <form className={cn('flex flex-col gap-6', className)} {...props}>
       <FieldGroup>
         <div className="flex flex-col items-center gap-1 text-center">
           <h1 className="text-2xl font-bold">Login to your account</h1>
           <p className="text-muted-foreground text-sm text-balance">
-            {user?.isGuest 
-              ? "You are currently in Guest Mode. Sign in to save your progress."
-              : "Enter your email below to login to your account"}
+            {user?.isGuest
+              ? 'You are currently in Guest Mode. Sign in to save your progress.'
+              : 'Enter your email below to login to your account'}
           </p>
         </div>
         <form className="flex flex-col gap-4">
@@ -87,14 +87,16 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'form'>)
             <Input id="password" type="password" required className="bg-background" />
           </Field>
           <Field>
-            <Button type="submit" className="w-full">Login</Button>
+            <Button type="submit" className="w-full">
+              Login
+            </Button>
           </Field>
         </form>
-        
+
         <FieldSeparator className="*:data-[slot=field-separator-content]:bg-muted dark:*:data-[slot=field-separator-content]:bg-card">
           Or continue with
         </FieldSeparator>
-        
+
         <div className="flex flex-col gap-2">
           <Button variant="outline" type="button" onClick={handleGoogleLogin} className="w-full">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="mr-2 h-4 w-4">
@@ -120,6 +122,6 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'form'>)
           </Link>
         </FieldDescription>
       </FieldGroup>
-    </div>
+    </form>
   );
 }

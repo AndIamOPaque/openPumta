@@ -16,6 +16,7 @@ import {
 import { useEffect } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useLayoutStore } from '@/store/useLayoutStore';
+import Image from 'next/image';
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: Home },
@@ -140,10 +141,11 @@ export default function Navigation({ mounted }: { mounted: boolean }) {
                 >
                   {user.avatarUrl ? (
                     <Image
+                      width={100}
+                      height={100}
                       src={user.avatarUrl}
                       alt="Avatar"
                       className="h-6 w-6 rounded-full object-cover shrink-0"
-                      fill
                     />
                   ) : (
                     <User className="h-6 w-6 shrink-0" />
