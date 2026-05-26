@@ -45,10 +45,14 @@ export default function HabitsPage() {
   const { user } = useAuthStore();
   const { data: dashboardData, isLoading: dashboardLoading } = useHabitDashboard();
 
-  // Fetch logs for the past 21 days
-  const twentyOneDaysAgo = new Date();
-  twentyOneDaysAgo.setDate(twentyOneDaysAgo.getDate() - 20);
-  const fromDateString = twentyOneDaysAgo.toISOString();
+  // Stable date — computed once at mount, never changes mid-session
+  const fromDateString = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 20);
+    d.setHours(0, 0, 0, 0);
+    return d.toISOString();
+  }, []);
+
   const { data: habitsWithLogs } = useHabitsWithLogs(fromDateString);
   const { data: subjects } = useSubjects();
 
@@ -175,10 +179,6 @@ export default function HabitsPage() {
                 (l: HabitLog) => new Date(l.startedAt).toISOString().split('T')[0],
               ) || [],
             );
-
-            // If we mark it complete just now contextually on frontend
-            if (isCompletedToday) completionDates.add(new Date().toISOString().split('T')[0]);
-
             return (
               <Card
                 key={habit.id}
@@ -215,6 +215,7 @@ export default function HabitsPage() {
                     <span>21-Day History</span>
                     <span>{completionDates.size} / 21</span>
                   </div>
+                  {/*dear troubled heat map krish was here*/}
                   <div className="grid grid-cols-7 gap-1">
                     {last21Days.map((dateStr, i) => {
                       const done = completionDates.has(dateStr);
