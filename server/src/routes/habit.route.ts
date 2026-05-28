@@ -4,6 +4,7 @@ import {
   getAllHabits,
   createHabit,
   updateHabit,
+  deleteHabit,
   startHabitLog,
   endHabitLog,
   getHabitLogs,
@@ -21,6 +22,7 @@ router.post('/', createHabit);
 router.get('/logs', getAllHabitsWithLogs);
 router.get('/dashboard', getHabitDashboardData);
 router.patch('/:id', updateHabit);
+router.delete('/:id', deleteHabit);
 router.post('/:habitId/start', startHabitLog);
 router.post('/:habitId/end', endHabitLog);
 router.get('/:habitId/logs', getHabitLogs);

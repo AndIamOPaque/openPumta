@@ -85,6 +85,14 @@ const updateHabit = asyncHandler(async (req: Request, res: Response) => {
     throw new ApiError(404, 'Habit not found');
   }
 
+  // subjectId may arrive as a number, stringified number, or null
+  const resolvedSubjectId =
+    subjectId === null || subjectId === 'null' || subjectId === ''
+      ? null
+      : subjectId !== undefined
+        ? Number(subjectId)
+        : undefined;
+
   const updatedHabit = await prisma.habit.update({
     where: {
       id: idNum,
@@ -93,7 +101,7 @@ const updateHabit = asyncHandler(async (req: Request, res: Response) => {
       ...(name !== undefined && { name }),
       ...(description !== undefined && { description }),
       ...(difficulty !== undefined && { difficulty }),
-      ...(subjectId !== undefined && { subjectId: subjectId ? parseInt(subjectId) : null }),
+      ...(resolvedSubjectId !== undefined && { subjectId: resolvedSubjectId }),
       ...(deleted !== undefined && { deleted }),
     },
   });
@@ -354,10 +362,33 @@ const toggleHabitCompletion = asyncHandler(async (req: Request, res: Response) =
   }
 });
 
+const deleteHabit = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const idNum = Number(id);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const userId = (req as any).user?.id;
+
+  const existingHabit = await prisma.habit.findFirst({
+    where: { id: idNum, userId: Number(userId), deleted: false },
+  });
+
+  if (!existingHabit) {
+    throw new ApiError(404, 'Habit not found');
+  }
+
+  await prisma.habit.update({
+    where: { id: idNum },
+    data: { deleted: true },
+  });
+
+  return res.status(200).json(new ApiResponse(200, null, 'Habit deleted successfully'));
+});
+
 export {
   getAllHabits,
   createHabit,
   updateHabit,
+  deleteHabit,
   startHabitLog,
   endHabitLog,
   getHabitLogs,
