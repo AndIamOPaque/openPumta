@@ -1,21 +1,13 @@
 'use client';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-  FieldSeparator,
-} from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
+import { FieldDescription, FieldGroup } from '@/components/ui/field';
 import Link from 'next/link';
-import { useEffect } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useRouter } from 'next/navigation';
 
-export function LoginForm({ className, ...props }: React.ComponentProps<'form'>) {
+export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) {
   const { user, loading, fetchUser, guestLogin, logout } = useAuthStore();
   const router = useRouter();
 
@@ -56,48 +48,18 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'form'>)
   }
 
   return (
-    <form className={cn('flex flex-col gap-6', className)} {...props}>
+    <div className={cn('flex flex-col gap-6', className)} {...props}>
       <FieldGroup>
         <div className="flex flex-col items-center gap-1 text-center">
           <h1 className="text-2xl font-bold">Login to your account</h1>
           <p className="text-muted-foreground text-sm text-balance">
             {user?.isGuest
               ? 'You are currently in Guest Mode. Sign in to save your progress.'
-              : 'Enter your email below to login to your account'}
+              : 'Sign in with Google to access your dashboard'}
           </p>
         </div>
-        <form className="flex flex-col gap-4">
-          <Field>
-            <FieldLabel htmlFor="email">Email</FieldLabel>
-            <Input
-              id="email"
-              type="email"
-              placeholder="m@example.com"
-              required
-              className="bg-background"
-            />
-          </Field>
-          <Field>
-            <div className="flex items-center">
-              <FieldLabel htmlFor="password">Password</FieldLabel>
-              <a href="#" className="ml-auto text-sm underline-offset-4 hover:underline">
-                Forgot your password?
-              </a>
-            </div>
-            <Input id="password" type="password" required className="bg-background" />
-          </Field>
-          <Field>
-            <Button type="submit" className="w-full">
-              Login
-            </Button>
-          </Field>
-        </form>
 
-        <FieldSeparator className="*:data-[slot=field-separator-content]:bg-muted dark:*:data-[slot=field-separator-content]:bg-card">
-          Or continue with
-        </FieldSeparator>
-
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3 mt-2">
           <Button variant="outline" type="button" onClick={handleGoogleLogin} className="w-full">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="mr-2 h-4 w-4">
               <path
@@ -105,7 +67,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'form'>)
                 fill="currentColor"
               />
             </svg>
-            Login with Google
+            Continue with Google
           </Button>
 
           {!user?.isGuest && (
@@ -122,6 +84,6 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'form'>)
           </Link>
         </FieldDescription>
       </FieldGroup>
-    </form>
+    </div>
   );
 }
