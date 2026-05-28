@@ -56,9 +56,9 @@ interface DetailedHabit extends Habit {
 type FilterRange = 7 | 14 | 21 | 30 | 'all';
 
 const DIFFICULTY_OPTIONS: { label: string; value: HabitDifficulty; color: string }[] = [
-  { label: 'Easy', value: 'EASY', color: 'text-emerald-500' },
+  { label: 'Easy', value: 'LOW', color: 'text-emerald-500' },
   { label: 'Medium', value: 'MID', color: 'text-amber-500' },
-  { label: 'Hard', value: 'HARD', color: 'text-rose-500' },
+  { label: 'Hard', value: 'HIGH', color: 'text-rose-500' },
 ];
 
 const FILTER_OPTIONS: { label: string; value: FilterRange }[] = [

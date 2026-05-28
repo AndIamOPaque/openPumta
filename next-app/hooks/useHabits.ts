@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 
-export type HabitDifficulty = 'EASY' | 'MID' | 'HARD';
+export type HabitDifficulty = 'HIGH' | 'MID' | 'LOW';
 
 export interface Habit {
   id: number;
@@ -71,7 +71,6 @@ export const useToggleHabitCompletion = () => {
       queryClient.invalidateQueries({ queryKey: ['habitDashboard'] });
       queryClient.invalidateQueries({ queryKey: ['habits'] });
       queryClient.invalidateQueries({ queryKey: ['habitsWithLogs'] }); // keep heatmap in sync as this is needed - krish
-
     },
   });
 };

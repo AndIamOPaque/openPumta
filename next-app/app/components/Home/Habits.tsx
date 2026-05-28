@@ -36,9 +36,9 @@ import { useSubjects } from '@/hooks/useSubjects';
 import { toast } from 'sonner';
 
 const DIFFICULTY_OPTIONS: { label: string; value: HabitDifficulty; color: string }[] = [
-  { label: 'Easy', value: 'EASY', color: 'text-emerald-500' },
+  { label: 'Easy', value: 'LOW', color: 'text-emerald-500' },
   { label: 'Medium', value: 'MID', color: 'text-amber-500' },
-  { label: 'Hard', value: 'HARD', color: 'text-rose-500' },
+  { label: 'Hard', value: 'HIGH', color: 'text-rose-500' },
 ];
 
 export default function Habits() {
