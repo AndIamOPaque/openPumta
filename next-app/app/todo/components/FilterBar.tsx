@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useWorkspaceStore, FilterType } from '@/store/useWorkspaceStore';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,16 @@ export function FilterBar() {
   const { activeFilter, setFilter } = useWorkspaceStore();
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  // Sync store with URL on mount
+  useEffect(() => {
+    const filterFromUrl = searchParams.get('filter') as FilterType;
+    if (filterFromUrl && FILTERS.some((f) => f.key === filterFromUrl)) {
+      setFilter(filterFromUrl);
+    } else {
+      setFilter('all');
+    }
+  }, [searchParams, setFilter]);
 
   const handleFilter = (filter: FilterType) => {
     setFilter(filter);

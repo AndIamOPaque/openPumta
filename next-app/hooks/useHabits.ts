@@ -1,10 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 
+export type HabitDifficulty = 'EASY' | 'MID' | 'HARD';
+
 export interface Habit {
   id: number;
   name: string;
   description?: string;
+  difficulty?: HabitDifficulty;
   userId: number;
   subjectId?: number;
 }
@@ -84,6 +87,39 @@ export const useDeleteHabit = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['habits'] });
       queryClient.invalidateQueries({ queryKey: ['habitDashboard'] });
+    },
+  });
+};
+
+export const useUpdateHabit = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      name,
+      description,
+      difficulty,
+      subjectId,
+    }: {
+      id: number;
+      name?: string;
+      description?: string;
+      difficulty?: HabitDifficulty;
+      subjectId?: number | null;
+    }) => {
+      const { data } = await api.patch(`/habits/${id}`, {
+        name,
+        description,
+        difficulty,
+        subjectId,
+      });
+      return data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['habits'] });
+      queryClient.invalidateQueries({ queryKey: ['habitDashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['habitsWithLogs'] });
     },
   });
 };

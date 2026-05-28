@@ -9,9 +9,9 @@ import { BlockType } from '../../generated/prisma/enums.js';
 async function assertColumnOwner(columnId: number, userId: number) {
   const column = await prisma.column.findFirst({
     where: {
-      id: columnId,
+      id: Number(columnId),
       deleted: false,
-      space: { userId, deleted: false },
+      space: { userId: Number(userId), deleted: false },
     },
   });
   if (!column) throw new ApiError(404, 'Column not found');
@@ -20,7 +20,7 @@ async function assertColumnOwner(columnId: number, userId: number) {
 
 const getBlocks = asyncHandler(async (req: Request, res: Response) => {
   const { columnId } = req.params;
-  const { filter } = req.query;
+  const { filter, from, to } = req.query;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const userId = (req as any).user?.id;
   if (!userId) throw new ApiError(401, 'Unauthorized');
@@ -32,6 +32,7 @@ const getBlocks = asyncHandler(async (req: Request, res: Response) => {
   // Build date filter for scheduledAt / dueAt based on query param
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let dateFilter: any = {};
+
   if (filter === 'today') {
     const start = new Date(now);
     start.setHours(0, 0, 0, 0);
@@ -48,7 +49,6 @@ const getBlocks = asyncHandler(async (req: Request, res: Response) => {
       isCompleted: false,
     };
   } else if (filter === 'dateRange') {
-    const { from, to } = req.query;
     if (from && to) {
       dateFilter = {
         scheduledAt: { gte: new Date(from as string), lte: new Date(to as string) },
@@ -71,6 +71,7 @@ const getBlocks = asyncHandler(async (req: Request, res: Response) => {
 const createBlock = asyncHandler(async (req: Request, res: Response) => {
   const { columnId } = req.params;
   const { type, content, order, scheduledAt, dueAt, reminderAt } = req.body;
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const userId = (req as any).user?.id;
   if (!userId) throw new ApiError(401, 'Unauthorized');
@@ -92,7 +93,7 @@ const createBlock = asyncHandler(async (req: Request, res: Response) => {
       type: (type as BlockType) || 'TODO',
       content: content || '',
       order: nextOrder,
-      scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
+      scheduledAt: scheduledAt ? new Date(scheduledAt) : new Date(),
       dueAt: dueAt ? new Date(dueAt) : null,
       reminderAt: reminderAt ? new Date(reminderAt) : null,
     },
@@ -122,7 +123,9 @@ const updateBlock = asyncHandler(async (req: Request, res: Response) => {
       ...(order !== undefined && { order }),
       ...(isCompleted !== undefined && { isCompleted }),
       ...(type !== undefined && { type: type as BlockType }),
-      ...(scheduledAt !== undefined && { scheduledAt: scheduledAt ? new Date(scheduledAt) : null }),
+      ...(scheduledAt !== undefined && {
+        scheduledAt: scheduledAt ? new Date(scheduledAt) : existing.scheduledAt,
+      }),
       ...(dueAt !== undefined && { dueAt: dueAt ? new Date(dueAt) : null }),
       ...(reminderAt !== undefined && { reminderAt: reminderAt ? new Date(reminderAt) : null }),
     },

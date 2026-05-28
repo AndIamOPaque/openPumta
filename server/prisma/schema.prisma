@@ -158,7 +158,7 @@ model Space {
   userId     Int
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   name       String
-  icon       String?  // emoji or short string
+  icon       String? // emoji or short string
   order      Int      @default(0)
   isArchived Boolean  @default(false)
   deleted    Boolean  @default(false)
@@ -176,7 +176,7 @@ model Column {
   space       Space    @relation(fields: [spaceId], references: [id], onDelete: Cascade)
   title       String
   order       Int      @default(0)
-  width       Int?     // px width, null = default (280)
+  width       Int? // px width, null = default (280)
   isCollapsed Boolean  @default(false)
   deleted     Boolean  @default(false)
   blocks      Block[]
@@ -195,16 +195,16 @@ enum BlockType {
 }
 
 model Block {
-  id          Int       @id @default(autoincrement())
-  columnId    Int
-  column      Column    @relation(fields: [columnId], references: [id], onDelete: Cascade)
-  type        BlockType @default(TODO)
-  content     String    @default("")
-  order       Int       @default(0)
-  deleted     Boolean   @default(false)
-  // TODO-specific metadata
+  id       Int       @id @default(autoincrement())
+  columnId Int
+  column   Column    @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  type     BlockType @default(TODO)
+  content  String    @default("")
+  order    Int       @default(0)
+  deleted  Boolean   @default(false)
+
   isCompleted Boolean   @default(false)
-  scheduledAt DateTime?
+  scheduledAt DateTime  @default(now())
   dueAt       DateTime?
   reminderAt  DateTime?
   createdAt   DateTime  @default(now())

@@ -12,6 +12,7 @@ import {
   Area,
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useDashboardStats } from '@/hooks/useStats';
 
@@ -40,7 +41,36 @@ function Stats() {
   }, []);
 
   if (isLoading) {
-    return <div className="p-4 flex items-center justify-center">Loading statistics...</div>;
+    return (
+      <section className="flex flex-col h-full p-4 overflow-hidden">
+        <div className="flex justify-between items-center mb-4 shrink-0">
+          <Skeleton className="h-8 w-40" />
+          <Skeleton className="h-4 w-28" />
+        </div>
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-0">
+          <Card className="bg-background border-border/40 overflow-hidden flex flex-col shadow-none">
+            <CardHeader className="py-2 px-4">
+              <Skeleton className="h-4 w-32" />
+            </CardHeader>
+            <CardContent className="flex-1 p-4">
+              <div className="flex items-end gap-1 h-full">
+                {[60, 45, 80, 35, 70, 50, 90].map((h, i) => (
+                  <Skeleton key={i} className="flex-1 rounded-sm" style={{ height: `${h}%` }} />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-background border-border/40 overflow-hidden flex flex-col shadow-none">
+            <CardHeader className="py-2 px-4">
+              <Skeleton className="h-4 w-32" />
+            </CardHeader>
+            <CardContent className="flex-1 p-4">
+              <Skeleton className="h-full w-full rounded-xl" />
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+    );
   }
 
   const focusData =

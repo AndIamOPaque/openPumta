@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useDailyRatingStats, useSubmitDailyRating } from '@/hooks/useRatings';
 import { Star, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 
 export default function DailyRating() {
@@ -39,7 +40,28 @@ export default function DailyRating() {
   };
 
   if (isLoading) {
-    return <div className="p-4 flex items-center justify-center">Loading rating data...</div>;
+    return (
+      <Card className="h-full flex flex-col bg-background shadow-none border-border/40">
+        <CardHeader className="pb-2">
+          <Skeleton className="h-6 w-32" />
+        </CardHeader>
+        <CardContent className="flex-1 flex flex-col gap-4">
+          <div className="flex flex-col gap-3 p-4 bg-muted/30 rounded-xl border border-dashed">
+            <div className="flex justify-center gap-2 py-2">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <Skeleton key={i} className="h-8 w-8 rounded-full" />
+              ))}
+            </div>
+            <Skeleton className="h-16 w-full rounded-xl" />
+            <Skeleton className="h-9 w-full rounded-xl" />
+          </div>
+          <div className="grid grid-cols-2 gap-3 mt-auto">
+            <Skeleton className="h-20 rounded-xl" />
+            <Skeleton className="h-20 rounded-xl" />
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   const hasRatedToday = stats?.today !== null;
