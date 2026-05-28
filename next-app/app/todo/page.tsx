@@ -8,7 +8,9 @@ import { SpaceNav } from './components/SpaceNav';
 import { FilterBar } from './components/FilterBar';
 import { SpaceBoard } from './components/SpaceBoard';
 import { toast } from 'sonner';
-import { Loader2, LayoutDashboard } from 'lucide-react';
+import { LayoutDashboard } from 'lucide-react';
+
+import { TodoSkeleton, BoardSkeleton } from './components/TodoSkeleton';
 
 function WorkspaceInner() {
   const { activeSpaceId, activeFilter, dateRange, setActiveSpace } = useWorkspaceStore();
@@ -38,12 +40,7 @@ function WorkspaceInner() {
 
   // ─── Loading state ─────────────────────────────────────────────────────────
   if (spacesLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full min-h-[60vh] gap-3 text-muted-foreground">
-        <Loader2 className="h-8 w-8 animate-spin opacity-50" />
-        <p className="text-sm">Loading your workspace...</p>
-      </div>
-    );
+    return <TodoSkeleton />;
   }
 
   // ─── Empty state — no spaces ───────────────────────────────────────────────
@@ -102,9 +99,7 @@ function WorkspaceInner() {
             Select a space to get started
           </div>
         ) : columnsLoading ? (
-          <div className="flex items-center justify-center h-40">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-          </div>
+          <BoardSkeleton />
         ) : (
           <SpaceBoard
             spaceId={activeSpaceId}
@@ -120,7 +115,7 @@ function WorkspaceInner() {
 
 export default function TodoPage() {
   return (
-    <Suspense>
+    <Suspense fallback={<TodoSkeleton />}>
       <WorkspaceInner />
     </Suspense>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { useDroppable } from '@dnd-kit/core';
 import { Column } from '@/hooks/useColumns';
@@ -16,6 +16,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
+
+const MIN_WIDTH = 200;
+const MAX_WIDTH = 700;
+const DEFAULT_WIDTH = 280;
 
 const BLOCK_TYPES: { type: BlockType; label: string; description: string }[] = [
   { type: 'HEADING', label: 'Heading', description: 'Large section title' },
@@ -67,7 +71,51 @@ export function ColumnCard({
   const [titleValue, setTitleValue] = useState(column.title);
   const titleInputRef = useRef<HTMLInputElement>(null);
 
-  // Make column a droppable target for cross-column DnD
+  // ── Resize state ────────────────────────────────────────────────────────────
+  const [localWidth, setLocalWidth] = useState<number>(column.width ?? DEFAULT_WIDTH);
+  const [prevWidth, setPrevWidth] = useState(column.width);
+  const [isResizing, setIsResizing] = useState(false);
+  const dragStartX = useRef<number>(0);
+  const dragStartWidth = useRef<number>(DEFAULT_WIDTH);
+
+  // Keep localWidth in sync when the server-persisted value changes
+  if (column.width !== prevWidth) {
+    setPrevWidth(column.width);
+    setLocalWidth(column.width ?? DEFAULT_WIDTH);
+  }
+
+  const handleResizeMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dragStartX.current = e.clientX;
+      dragStartWidth.current = localWidth;
+      setIsResizing(true);
+
+      const onMouseMove = (ev: MouseEvent) => {
+        const delta = ev.clientX - dragStartX.current;
+        const newWidth = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, dragStartWidth.current + delta));
+        setLocalWidth(newWidth);
+      };
+
+      const onMouseUp = (ev: MouseEvent) => {
+        setIsResizing(false);
+        const delta = ev.clientX - dragStartX.current;
+        const finalWidth = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, dragStartWidth.current + delta));
+        setLocalWidth(finalWidth);
+        // Persist to server
+        onUpdateColumn({ id: column.id, spaceId: column.spaceId, width: finalWidth });
+        window.removeEventListener('mousemove', onMouseMove);
+        window.removeEventListener('mouseup', onMouseUp);
+      };
+
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('mouseup', onMouseUp);
+    },
+    [localWidth, column.id, column.spaceId, onUpdateColumn],
+  );
+
+  // ── DnD droppable ───────────────────────────────────────────────────────────
   const { setNodeRef: setDropRef, isOver } = useDroppable({ id: `col-${column.id}` });
 
   const blockIds = blocks.map((b) => b.id);
@@ -102,7 +150,7 @@ export function ColumnCard({
           <ChevronDown className="h-4 w-4 rotate-[-90deg]" />
         </button>
         <span
-          className="text-[10px] font-semibold text-muted-foreground writing-mode-vertical"
+          className="text-[10px] font-semibold text-muted-foreground"
           style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
         >
           {column.title}
@@ -114,11 +162,14 @@ export function ColumnCard({
   return (
     <div
       ref={setDropRef}
-      style={{ width: column.width ? `${column.width}px` : '280px' }}
+      style={{ width: `${localWidth}px` }}
       className={cn(
-        'flex flex-col rounded-xl bg-card/60 border border-border/30 flex-shrink-0 transition-all duration-200',
+        'relative flex flex-col rounded-xl bg-card/60 border border-border/30 flex-shrink-0',
+        // Suppress transition during live resize so it doesn't lag
+        !isResizing && 'transition-[border-color,box-shadow] duration-200',
         isOver && 'border-primary/50 bg-primary/5 shadow-lg shadow-primary/10',
         isFocused && 'ring-2 ring-primary/40',
+        isResizing && 'select-none',
       )}
     >
       {/* ── Column Header ── */}
@@ -267,6 +318,35 @@ export function ColumnCard({
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
+      </div>
+
+      {/* ── Resize Handle ─────────────────────────────────────────────────────
+          Positioned on the right edge. Visible gutter on hover, highlighted
+          in primary color while actively dragging.                           */}
+      <div
+        onMouseDown={handleResizeMouseDown}
+        title="Drag to resize"
+        className={cn(
+          'absolute top-0 right-0 h-full w-2 -mr-1 z-10',
+          'flex items-center justify-center',
+          'cursor-col-resize group/handle',
+        )}
+      >
+        {/* The visual bar */}
+        <div
+          className={cn(
+            'h-full w-[3px] rounded-full transition-all duration-150',
+            isResizing
+              ? 'bg-primary/70 w-[4px] shadow-[0_0_8px_2px] shadow-primary/30'
+              : 'bg-transparent group-hover/handle:bg-border/70',
+          )}
+        />
+        {/* Width tooltip while resizing */}
+        {isResizing && (
+          <span className="absolute -top-7 left-1/2 -translate-x-1/2 bg-popover border border-border/40 text-foreground text-[10px] font-mono px-1.5 py-0.5 rounded shadow-md whitespace-nowrap pointer-events-none">
+            {localWidth}px
+          </span>
+        )}
       </div>
     </div>
   );
