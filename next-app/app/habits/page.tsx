@@ -31,9 +31,20 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Plus, Trash2, Calendar, Activity, Pencil, Flame } from 'lucide-react';
+import {
+  Plus,
+  Trash2,
+  Calendar,
+  Activity,
+  Pencil,
+  Flame,
+  SlidersHorizontal,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Habit {
@@ -102,6 +113,20 @@ export default function HabitsPage() {
   const { data: dashboardData, isLoading: dashboardLoading } = useHabitDashboard();
 
   const [filterRange, setFilterRange] = useState<FilterRange>(21);
+  const [filterOpen, setFilterOpen] = useState(false);
+
+  // Add habit dialog state
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [selectedSubject, setSelectedSubject] = useState<string>('none');
+  const [selectedDifficulty, setSelectedDifficulty] = useState<HabitDifficulty>('MID');
+
+  // Edit habit dialog state
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editSubject, setEditSubject] = useState<string>('none');
+  const [editDifficulty, setEditDifficulty] = useState<HabitDifficulty>('MID');
 
   // Build from date based on filter
   const fromDateString = useMemo(() => {
@@ -120,23 +145,17 @@ export default function HabitsPage() {
   const deleteHabit = useDeleteHabit();
   const updateHabit = useUpdateHabit();
 
-  // Add habit form state
-  const [newTaskTitle, setNewTaskTitle] = useState('');
-  const [selectedSubject, setSelectedSubject] = useState<string>('none');
-  const [selectedDifficulty, setSelectedDifficulty] = useState<HabitDifficulty>('MID');
-
-  // Edit habit dialog state
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
-  const [editName, setEditName] = useState('');
-  const [editSubject, setEditSubject] = useState<string>('none');
-  const [editDifficulty, setEditDifficulty] = useState<HabitDifficulty>('MID');
-
   const habits = dashboardData?.habits || [];
   const todayStats = dashboardData?.todayStats || [];
   const completedHabitIds = new Set(todayStats.map((log: HabitLog) => log.habitId));
 
   useHabitRewards(completedHabitIds.size);
+
+  const resetAddForm = () => {
+    setNewTaskTitle('');
+    setSelectedSubject('none');
+    setSelectedDifficulty('MID');
+  };
 
   const handleAddHabit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -155,9 +174,8 @@ export default function HabitsPage() {
       },
       {
         onSuccess: () => {
-          setNewTaskTitle('');
-          setSelectedSubject('none');
-          setSelectedDifficulty('MID');
+          resetAddForm();
+          setAddDialogOpen(false);
           toast.success('Habit added');
         },
         onError: () => toast.error('Failed to add habit'),
@@ -198,7 +216,6 @@ export default function HabitsPage() {
   // Build the days array based on filter
   const daysArray = useMemo(() => {
     if (filterRange === 'all') {
-      // Find earliest log date
       const allDates: string[] = [];
       habitsWithLogs?.forEach((h: DetailedHabit) => {
         h.log?.forEach((l: HabitLog) => {
@@ -206,7 +223,6 @@ export default function HabitsPage() {
         });
       });
       if (allDates.length === 0) {
-        // fallback 21 days
         const arr = [];
         for (let i = 20; i >= 0; i--) {
           const d = new Date();
@@ -246,27 +262,21 @@ export default function HabitsPage() {
     );
   };
 
-  // Grid cols for heatmap based on number of days
   const gridCols =
-    daysArray.length <= 7
-      ? 'grid-cols-7'
-      : daysArray.length <= 14
-        ? 'grid-cols-7'
-        : daysArray.length <= 21
-          ? 'grid-cols-7'
-          : daysArray.length <= 30
-            ? 'grid-cols-6'
-            : 'grid-cols-7';
+    daysArray.length <= 21 ? 'grid-cols-7' : daysArray.length <= 30 ? 'grid-cols-6' : 'grid-cols-7';
+
+  const activeFilterLabel = FILTER_OPTIONS.find((o) => o.value === filterRange)?.label ?? '21 Days';
 
   return (
     <div className="flex flex-col h-full max-w-5xl mx-auto p-4 lg:p-8">
+      {/* Header */}
       <div className="flex items-center gap-3 mb-8">
         <div className="bg-primary/20 p-3 rounded-xl text-primary">
           <Activity className="h-6 w-6" />
         </div>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Behavior Tracking</h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Monitor your habit cycles and maintain your perfect days.
           </p>
         </div>
@@ -278,64 +288,163 @@ export default function HabitsPage() {
         )}
       </div>
 
-      {/* Add Habit Form */}
-      <form onSubmit={handleAddHabit} className="flex flex-col sm:flex-row gap-2 mb-4">
-        <Input
-          className="flex-1 bg-background border-border/60 rounded-xl h-12 px-4 shadow-sm"
-          placeholder="Install a new habit..."
-          value={newTaskTitle}
-          onChange={(e) => setNewTaskTitle(e.target.value)}
-        />
-        <Select
-          value={selectedDifficulty}
-          onValueChange={(v) => setSelectedDifficulty(v as HabitDifficulty)}
+      {/* Toolbar: Add + Filter toggle */}
+      <div className="flex items-center gap-2 mb-3">
+        {/* Add Habit Modal */}
+        <Dialog
+          open={addDialogOpen}
+          onOpenChange={(open) => {
+            setAddDialogOpen(open);
+            if (!open) resetAddForm();
+          }}
         >
-          <SelectTrigger className="w-[140px] h-12 rounded-xl">
-            <SelectValue placeholder="Difficulty" />
-          </SelectTrigger>
-          <SelectContent>
-            {DIFFICULTY_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                <span className={opt.color}>{opt.label}</span>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={selectedSubject} onValueChange={setSelectedSubject}>
-          <SelectTrigger className="w-[160px] h-12 rounded-xl">
-            <SelectValue placeholder="Link Subject" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">No Subject</SelectItem>
-            {subjects?.map((s) => (
-              <SelectItem key={s.id} value={s.id.toString()}>
-                {s.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button
-          type="submit"
-          disabled={!newTaskTitle.trim() || createHabit.isPending || habits.length >= 6}
-          className="h-12 px-6 rounded-xl shrink-0"
-        >
-          <Plus className="h-5 w-5 mr-2" />
-          Add ({habits.length}/6)
-        </Button>
-      </form>
+          <DialogTrigger asChild>
+            <Button className="h-10 px-5 rounded-xl gap-2" disabled={habits.length >= 6}>
+              <Plus className="h-4 w-4" />
+              Add Habit
+              <span className="text-primary-foreground/60 text-xs font-normal">
+                ({habits.length}/6)
+              </span>
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md rounded-2xl p-0 gap-0 overflow-hidden border-none shadow-2xl">
+            <DialogHeader className="p-6 pb-4 bg-muted/20">
+              <DialogTitle className="text-xl font-bold tracking-tight">
+                Install a New Habit
+              </DialogTitle>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                Build consistency one day at a time.
+              </p>
+            </DialogHeader>
+            <form onSubmit={handleAddHabit} className="flex flex-col">
+              <div className="p-6 pt-4 space-y-5">
+                {/* Name */}
+                <div className="flex flex-col gap-2">
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Habit Name
+                  </Label>
+                  <Input
+                    placeholder="e.g. Read 30 minutes"
+                    value={newTaskTitle}
+                    onChange={(e) => setNewTaskTitle(e.target.value)}
+                    required
+                    autoFocus
+                    className="bg-muted/30 border-muted-foreground/20 focus-visible:ring-primary"
+                  />
+                </div>
 
-      {/* Filter Options */}
-      <div className="flex items-center gap-2 mb-6">
-        <span className="text-sm text-muted-foreground font-medium mr-1">Heatmap:</span>
-        <div className="flex gap-1.5 flex-wrap">
+                {/* Difficulty */}
+                <div className="flex flex-col gap-2">
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Difficulty
+                  </Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {DIFFICULTY_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setSelectedDifficulty(opt.value)}
+                        className={`py-2.5 rounded-xl text-sm font-semibold border transition-all ${
+                          selectedDifficulty === opt.value
+                            ? 'border-primary bg-primary/10 text-primary shadow-sm'
+                            : 'border-muted-foreground/20 bg-muted/20 text-muted-foreground hover:bg-muted/40'
+                        }`}
+                      >
+                        <span className={selectedDifficulty === opt.value ? '' : opt.color}>
+                          {opt.label}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Subject */}
+                <div className="flex flex-col gap-2">
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Linked Subject
+                    <span className="ml-1 normal-case font-normal text-muted-foreground/60">
+                      (optional)
+                    </span>
+                  </Label>
+                  <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                    <SelectTrigger className="bg-muted/30 border-muted-foreground/20">
+                      <SelectValue placeholder="No subject" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No Subject</SelectItem>
+                      {subjects?.map((s) => (
+                        <SelectItem key={s.id} value={s.id.toString()}>
+                          {s.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <DialogFooter className="p-6 pt-0 gap-2 sm:gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setAddDialogOpen(false)}
+                  className="rounded-xl flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={!newTaskTitle.trim() || createHabit.isPending}
+                  className="rounded-xl flex-1 shadow-lg shadow-primary/20"
+                >
+                  {createHabit.isPending ? 'Adding...' : 'Add Habit'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Spacer */}
+        <div className="flex-1" />
+
+        {/* Filter toggle button */}
+        <button
+          onClick={() => setFilterOpen((p) => !p)}
+          className={`flex items-center gap-2 h-10 px-4 rounded-xl text-sm font-medium border transition-all ${
+            filterOpen
+              ? 'bg-primary/10 border-primary/30 text-primary'
+              : 'bg-muted/30 border-muted-foreground/20 text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+          }`}
+        >
+          <SlidersHorizontal className="h-4 w-4" />
+          <span>
+            Heatmap
+            {!filterOpen && (
+              <span className="ml-1.5 text-xs opacity-70">· {activeFilterLabel}</span>
+            )}
+          </span>
+          {filterOpen ? (
+            <ChevronUp className="h-3.5 w-3.5 opacity-60" />
+          ) : (
+            <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+          )}
+        </button>
+      </div>
+
+      {/* Collapsible Filter Panel */}
+      <div
+        className={`overflow-hidden transition-all duration-300 ease-in-out ${
+          filterOpen ? 'max-h-24 opacity-100 mb-4' : 'max-h-0 opacity-0 mb-0'
+        }`}
+      >
+        <div className="flex items-center gap-2 pt-2 pb-1 flex-wrap">
           {FILTER_OPTIONS.map((opt) => (
             <button
               key={opt.value}
               onClick={() => setFilterRange(opt.value)}
-              className={`text-xs px-3 py-1.5 rounded-full font-medium transition-all ${
+              className={`text-sm px-4 py-1.5 rounded-full font-medium border transition-all ${
                 filterRange === opt.value
-                  ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                  : 'bg-muted/30 text-muted-foreground border-muted-foreground/20 hover:bg-muted/60 hover:text-foreground'
               }`}
             >
               {opt.label}
@@ -355,8 +464,8 @@ export default function HabitsPage() {
         ) : habits.length === 0 ? (
           <div className="col-span-full flex flex-col items-center justify-center p-12 text-center text-muted-foreground bg-muted/20 border border-dashed rounded-xl">
             <Calendar className="h-12 w-12 mb-4 opacity-20" />
-            <p>Your habit tracker is empty.</p>
-            <p className="text-sm">Add up to 6 habits above to begin your journey.</p>
+            <p className="font-medium">Your habit tracker is empty.</p>
+            <p className="text-sm mt-1">Click &quot;Add Habit&quot; above to begin your journey.</p>
           </div>
         ) : (
           habits.map((habit: Habit) => {
@@ -375,27 +484,30 @@ export default function HabitsPage() {
             return (
               <Card
                 key={habit.id}
-                className={`transition-all group ${isCompletedToday ? 'border-primary/50 bg-primary/5' : 'bg-background border-border/40'} flex flex-col`}
+                className={`transition-all group ${
+                  isCompletedToday
+                    ? 'border-primary/50 bg-primary/5'
+                    : 'bg-background border-border/40'
+                } flex flex-col`}
               >
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
-                  <div className="flex flex-col gap-0.5">
-                    <CardTitle className="text-lg leading-tight">{habit.name}</CardTitle>
-                    <div className="flex items-center gap-2">
+                  <div className="flex flex-col gap-0.5 min-w-0">
+                    <CardTitle className="text-base leading-tight truncate">{habit.name}</CardTitle>
+                    <div className="flex items-center gap-1.5">
                       {getDifficultyBadge(habit.difficulty)}
                       {linkedSubject && (
                         <>
                           {habit.difficulty && (
                             <span className="text-muted-foreground/40 text-[10px]">·</span>
                           )}
-                          <span className="text-[10px] text-muted-foreground font-medium">
+                          <span className="text-[10px] text-muted-foreground font-medium truncate">
                             {linkedSubject.name}
                           </span>
                         </>
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    {/* Edit button - visible on hover */}
+                  <div className="flex items-center gap-0.5 shrink-0 ml-2">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -423,11 +535,7 @@ export default function HabitsPage() {
                 </CardHeader>
                 <CardContent className="p-4 pt-2">
                   <div className="text-xs text-muted-foreground mb-2 flex justify-between font-medium">
-                    <span>
-                      {filterRange === 'all'
-                        ? 'All Time'
-                        : `Last ${filterRange === 21 ? '21' : filterRange} Days`}
-                    </span>
+                    <span>{filterRange === 'all' ? 'All Time' : `Last ${filterRange} Days`}</span>
                     <span>
                       {completionDates.size} /{' '}
                       {filterRange === 'all' ? daysArray.length : filterRange}
@@ -457,80 +565,85 @@ export default function HabitsPage() {
 
       {/* Edit Habit Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-w-md rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Edit Habit</DialogTitle>
+        <DialogContent className="max-w-md rounded-2xl p-0 gap-0 overflow-hidden border-none shadow-2xl">
+          <DialogHeader className="p-6 pb-4 bg-muted/20">
+            <DialogTitle className="text-xl font-bold tracking-tight">Edit Habit</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleEditSubmit} className="flex flex-col gap-5 mt-2">
-            <div className="flex flex-col gap-2">
-              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Habit Name
-              </Label>
-              <Input
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                placeholder="Habit name"
-                required
-                className="bg-muted/30 border-muted-foreground/20"
-              />
-            </div>
+          <form onSubmit={handleEditSubmit} className="flex flex-col">
+            <div className="p-6 pt-4 space-y-5">
+              <div className="flex flex-col gap-2">
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Habit Name
+                </Label>
+                <Input
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder="Habit name"
+                  required
+                  className="bg-muted/30 border-muted-foreground/20 focus-visible:ring-primary"
+                />
+              </div>
 
-            <div className="flex flex-col gap-2">
-              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Difficulty
-              </Label>
-              <div className="flex gap-2">
-                {DIFFICULTY_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => setEditDifficulty(opt.value)}
-                    className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-all ${
-                      editDifficulty === opt.value
-                        ? 'border-primary bg-primary/10 text-primary'
-                        : 'border-muted-foreground/20 bg-muted/20 text-muted-foreground hover:bg-muted/40'
-                    }`}
-                  >
-                    <span className={editDifficulty === opt.value ? '' : opt.color}>
-                      {opt.label}
-                    </span>
-                  </button>
-                ))}
+              <div className="flex flex-col gap-2">
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Difficulty
+                </Label>
+                <div className="grid grid-cols-3 gap-2">
+                  {DIFFICULTY_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setEditDifficulty(opt.value)}
+                      className={`py-2.5 rounded-xl text-sm font-semibold border transition-all ${
+                        editDifficulty === opt.value
+                          ? 'border-primary bg-primary/10 text-primary shadow-sm'
+                          : 'border-muted-foreground/20 bg-muted/20 text-muted-foreground hover:bg-muted/40'
+                      }`}
+                    >
+                      <span className={editDifficulty === opt.value ? '' : opt.color}>
+                        {opt.label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Linked Subject
+                  <span className="ml-1 normal-case font-normal text-muted-foreground/60">
+                    (optional)
+                  </span>
+                </Label>
+                <Select value={editSubject} onValueChange={setEditSubject}>
+                  <SelectTrigger className="bg-muted/30 border-muted-foreground/20">
+                    <SelectValue placeholder="Link to subject" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No Subject</SelectItem>
+                    {subjects?.map((s) => (
+                      <SelectItem key={s.id} value={s.id.toString()}>
+                        {s.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
-            <div className="flex flex-col gap-2">
-              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Linked Subject
-              </Label>
-              <Select value={editSubject} onValueChange={setEditSubject}>
-                <SelectTrigger className="bg-muted/30 border-muted-foreground/20">
-                  <SelectValue placeholder="Link to subject" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No Subject</SelectItem>
-                  {subjects?.map((s) => (
-                    <SelectItem key={s.id} value={s.id.toString()}>
-                      {s.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <DialogFooter className="gap-2 sm:gap-0">
+            <DialogFooter className="p-6 pt-0 gap-2 sm:gap-2">
               <Button
                 type="button"
                 variant="ghost"
                 onClick={() => setEditDialogOpen(false)}
-                className="rounded-xl"
+                className="rounded-xl flex-1"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={updateHabit.isPending || !editName.trim()}
-                className="rounded-xl px-8"
+                className="rounded-xl flex-1 shadow-lg shadow-primary/20"
               >
                 {updateHabit.isPending ? 'Saving...' : 'Save Changes'}
               </Button>
