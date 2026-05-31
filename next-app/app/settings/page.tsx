@@ -157,7 +157,7 @@ function ChartThemeSection() {
                       setThemeId(t.id);
                       toast.success(`Graph theme set to ${t.name}`);
                     }}
-                    className="group relative h-8 w-8 rounded-full border border-black/10 transition-transform hover:scale-110 active:scale-95 flex items-center justify-center shadow-sm cursor-pointer"
+                    className="group relative h-8 w-8 rounded-full  transition-transform hover:scale-110 active:scale-95 flex items-center justify-center shadow-sm cursor-pointer"
                     style={{
                       background: `linear-gradient(135deg, ${c1} 33%, ${c2} 33% 66%, ${c3} 66%)`,
                     }}
