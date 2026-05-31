@@ -11,8 +11,10 @@ type ClockCircleProps = {
 function ClockCircle({ percent, size, children, color = 'var(--primary)' }: ClockCircleProps) {
   return (
     <div
-      className={`relative my-10 mx-5 flex items-center justify-center ${
-        size === 'sm' ? 'h-90 w-90' : 'h-[50vh] w-[50vh]'
+      className={`relative my-4 mx-2 flex items-center justify-center ${
+        size === 'sm'
+          ? 'h-[55vw] w-[55vw] xs:h-[60vw] xs:w-[60vw] sm:h-64 sm:w-64 max-w-64 max-h-64 min-h-[180px] min-w-[180px]'
+          : 'h-[70vw] w-[70vw] xs:h-[75vw] xs:w-[75vw] sm:h-[45vh] sm:w-[45vh] max-w-[360px] max-h-[360px] min-h-[220px] min-w-[220px]'
       }`}
     >
       <div
